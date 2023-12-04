@@ -1,0 +1,20 @@
+
+add.o：     文件格式 elf64-littleriscv
+
+
+Disassembly of section .text.main:
+
+0000000000000000 <main>:
+   0:	1101                	add	sp,sp,-32
+   2:	ec22                	sd	s0,24(sp)
+   4:	1000                	add	s0,sp,32
+   6:	4789                	li	a5,2
+   8:	fef42623          	sw	a5,-20(s0)
+   c:	fec42783          	lw	a5,-20(s0)
+  10:	2785                	addw	a5,a5,1
+  12:	fef42623          	sw	a5,-20(s0)
+  16:	4781                	li	a5,0
+  18:	853e                	mv	a0,a5
+  1a:	6462                	ld	s0,24(sp)
+  1c:	6105                	add	sp,sp,32
+  1e:	8082                	ret
