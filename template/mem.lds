@@ -5,9 +5,9 @@ MEMORY
 {
 	/* Fake ROM area */
     /* BASE_ADDRESS replaced with the real value by the pysoc. */
-	rom (rxa)  		: ORIGIN = BASE_ADDRESS       ,       LENGTH = 512K   		/*只读存储器*/
-	peripheral(wxa) : ORIGIN = BASE_ADDRESS + 512K,       LENGTH = PERIPHERAL_LEN           /*读写存储器*/
-	ram (wxa)  		: ORIGIN = BASE_ADDRESS + PERIPHERAL_LEN + 512K,       LENGTH = 512K	        /*读写存储器*/
+	rom (rxa)  		: ORIGIN = BASE_ADDRESS       ,       LENGTH = 32K   		/*只读存储器*/
+	peripheral(wxa) : ORIGIN = BASE_ADDRESS + 32K,       LENGTH = PERIPHERAL_LEN           /*读写存储器*/
+	ram (wxa)  		: ORIGIN = BASE_ADDRESS + PERIPHERAL_LEN + 32K,       LENGTH = 32K	        /*读写存储器*/
 }
 
 SECTIONS
@@ -115,6 +115,7 @@ SECTIONS
 		. = ALIGN(16);
 		//. += __stack_size;
 		_stack_top = .;
+		
 	} >ram AT>ram
 
 	.uart :

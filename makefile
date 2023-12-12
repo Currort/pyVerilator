@@ -6,6 +6,9 @@ OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
 ARCH    = $(CROSS)ar
 BASE_ADDRESS ?= 0x000000000
+BASE_DEEPTH ?= 32K
+
+
 PERIPHERAL_LEN ?= 1K
 
 VERILATOR  = verilator
@@ -67,7 +70,7 @@ VSRC          = $(foreach dir,$(VSRC_DIR),$(wildcard $(dir)/*.v))
 VTOP          = SOC.v
 VTOP         := $(VTOP_DIR)/$(VTOP)
 VVTOP         = $(addprefix V,$(basename $(notdir $(VTOP))))
-TESTBENCH     = testbench.cpp monitor.cpp
+TESTBENCH     = monitor.cpp testbench.cpp
 TESTBENCH     :=$(addprefix $(TESTBENCH_DIR)/,$(TESTBENCH))
 VOUT_RUN      = $(addsuffix /$(VVTOP), $(V_OBJ_DIR))
 VOUT_MK       = $(addsuffix /$(VVTOP).mk, $(V_OBJ_DIR))
@@ -77,14 +80,13 @@ all: $(BUILD_DIR) $(OBJS_DIR) $(V_OBJ_DIR) $(VCD)
 
 $(VCD): $(VOUT_RUN) 
 	$(foreach i,$(OBJS_DIR),\
-	cd $(i) && ./v_obj/$(VVTOP) && cd $(ABSOLUTE_PATH);)
+	cd $(i) && ./v_obj/$(VVTOP) /home/zero/master_share/pySpike/csv/$(notdir $(i))/spike_log.csv > log.txt && cd $(ABSOLUTE_PATH);)
 
 $(VOUT_RUN): $(VOUT_MK)
 	$(foreach i,$(V_OBJ_DIR),\
 	make -j -C $(i) -f $(VVTOP).mk;)
 
 $(VOUT_MK): $(VTOP) $(TESTBENCH) $(VINSTR_PATH) $(VSRC)
-	echo $(VSRC) 
 	$(foreach i,$(OBJS_DIR),rm -rf $(i)/v_obj && \
 	$(VCC) $(VFLAGS) -y $(ABSOLUTE_PATH)/$(i) --Mdir $(i)/v_obj $(VTOP) $(TESTBENCH);)
 
@@ -94,14 +96,15 @@ $(VINSTR_PATH):$(INSTR_V) $(TEMPLATE_DIR)/Instr_path.v  $(INSTR_TXT)
 	sed 's#replace instr path#$(ABSOLUTE_PATH)/$(i)/instr.v#g' $(TEMPLATE_DIR)/Instr_path.v > $(i)/Instr_path.v;)
 
 $(INSTR_TXT): $(BIN) 
-	@$(foreach i,$(OBJS_DIR),$(OBJDUMP) -S $(i)/run > $(i)/instr.txt;)
+	@$(foreach i,$(OBJS_DIR),$(OBJDUMP) -D $(i)/run > $(i)/instr.txt;)
 
 
 $(BIN): $(CSRCS) $(BUILD_DIR)/mem$(BASE_ADDRESS).lds Makefile 
 	@$(CC) $(CFLAGS)  $< -T $(BUILD_DIR)/mem$(BASE_ADDRESS).lds -o $@
 
 $(INSTR_V):$(BIN)
-	@$(foreach i,$(OBJS_DIR),$(OBJCOPY) -O verilog $(i)/run $(i)/instr.v;)
+	@$(foreach i,$(OBJS_DIR),$(OBJCOPY) --change-section-address .data=0x8400 -O verilog $(i)/run $(i)/instr.v;)
+	# @$(foreach i,$(OBJS_DIR),$(OBJCOPY) -O verilog $(i)/run $(i)/instr.v;)
 
 # 使用 DBASE_ADDRESS替换模板LDS中的 DBASE_ADDRESS
 $(BUILD_DIR)/%$(BASE_ADDRESS).lds:  $(TEMPLATE_DIR)/mem.lds Makefile 
